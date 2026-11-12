@@ -38,7 +38,7 @@ build_abi() {   # abi  clang-target
     "$TC/clang" --target="$target" -O2 -Wall -fPIC -ffunction-sections -fdata-sections \
         -I"$GLUE" -Isrc ${CFLAGS:-} \
         -shared -o "$OUT/apk/lib/$abi/libnyanvsdomo.so" \
-        src/main.c src/game.c "$dir/glue.o" \
+        src/*.c "$dir/glue.o" \
         -u ANativeActivity_onCreate -Wl,--gc-sections -Wl,-z,max-page-size=16384 \
         -landroid -llog -lEGL -lGLESv2 -lOpenSLES -lm
     "$TC/llvm-strip" --strip-unneeded "$OUT/apk/lib/$abi/libnyanvsdomo.so"

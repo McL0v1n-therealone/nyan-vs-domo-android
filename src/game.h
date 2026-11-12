@@ -25,5 +25,6 @@ void game_touch_cancel_all(void);
 int  game_back(void);                   /* BACK key; returns 0 = quit the app */
 void game_menu_key(void);               /* MENU key: pause */
 void game_suspend(void);                /* app lost focus: pause + save */
+int  game_take_vibration(void);         /* ms to vibrate now (0 = none) */
 
 #endif

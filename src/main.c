@@ -8,6 +8,7 @@
 #include <GLES2/gl2.h>
 #include <SLES/OpenSLES.h>
 #include <SLES/OpenSLES_Android.h>
+#include <jni.h>
 #include <time.h>
 #include <string.h>
 #include "game.h"
@@ -243,6 +244,57 @@ static void on_cmd(struct android_app *app, int32_t cmd) {
     }
 }
 
+/* =====================================================================
+ * Java bits via JNI: vibration, and volume keys -> media volume
+ * ===================================================================== */
+static JNIEnv *jenv;
+static jobject vibrator;
+static jmethodID vibrate_m;
+
+static void jni_clear(void) {
+    if ((*jenv)->ExceptionCheck(jenv)) (*jenv)->ExceptionClear(jenv);
+}
+
+static void jni_init(struct android_app *app) {
+    JavaVM *vm = app->activity->vm;
+    if ((*vm)->AttachCurrentThread(vm, &jenv, NULL) != JNI_OK) { jenv = NULL; return; }
+    jobject act = app->activity->clazz;
+    jclass ac = (*jenv)->GetObjectClass(jenv, act);
+
+    jmethodID svc = (*jenv)->GetMethodID(jenv, ac, "setVolumeControlStream", "(I)V");
+    if (svc) (*jenv)->CallVoidMethod(jenv, act, svc, 3 /* AudioManager.STREAM_MUSIC */);
+    jni_clear();
+
+    jmethodID gss = (*jenv)->GetMethodID(jenv, ac, "getSystemService", "(Ljava/lang/String;)Ljava/lang/Object;");
+    jstring name = (*jenv)->NewStringUTF(jenv, "vibrator");
+    jobject v = gss ? (*jenv)->CallObjectMethod(jenv, act, gss, name) : NULL;
+    jni_clear();
+    if (v) {
+        vibrator = (*jenv)->NewGlobalRef(jenv, v);
+        jclass vc = (*jenv)->GetObjectClass(jenv, v);
+        vibrate_m = (*jenv)->GetMethodID(jenv, vc, "vibrate", "(J)V");
+        jni_clear();
+        (*jenv)->DeleteLocalRef(jenv, vc);
+        (*jenv)->DeleteLocalRef(jenv, v);
+    }
+    (*jenv)->DeleteLocalRef(jenv, name);
+    (*jenv)->DeleteLocalRef(jenv, ac);
+}
+
+static void jni_vibrate(int ms) {
+    if (!jenv || !vibrator || !vibrate_m || ms <= 0) return;
+    (*jenv)->CallVoidMethod(jenv, vibrator, vibrate_m, (jlong)ms);
+    jni_clear();
+}
+
+static void jni_term(struct android_app *app) {
+    if (!jenv) return;
+    if (vibrator) (*jenv)->DeleteGlobalRef(jenv, vibrator);
+    vibrator = NULL; vibrate_m = NULL;
+    (*app->activity->vm)->DetachCurrentThread(app->activity->vm);
+    jenv = NULL;
+}
+
 static double now_ms(void) {
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
@@ -261,6 +313,7 @@ void android_main(struct android_app *app) {
         if (!audio_init()) LOG("audio init failed");
         inited = 1;
     }
+    jni_init(app);
 
     const double STEP = 1000.0 / 60.0;
     double acc = 0, last = now_ms();
@@ -273,6 +326,7 @@ void android_main(struct android_app *app) {
             if (app->destroyRequested) {
                 game_suspend();
                 display_term();
+                jni_term(app);
                 return;
             }
             running = focused && has_window;
@@ -288,6 +342,7 @@ void android_main(struct android_app *app) {
         else acc -= steps * STEP;
         if (acc < -8.0) acc = -8.0;
         for (int i = 0; i < steps; i++) game_frame();
+        jni_vibrate(game_take_vibration());
         display_present();
     }
 }
