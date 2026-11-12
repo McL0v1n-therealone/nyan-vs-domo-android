@@ -1,6 +1,6 @@
 # Nyan Cat vs Domo-kun (Android)
 
-Android port of the [PSP homebrew shoot-'em-up](../psp/nyancat). Fly Nyan Cat through space, dodge the
+Android port of the [PSP homebrew shoot-'em-up](https://github.com/McL0v1n-therealone/nyan-cat-vs-domo-kun). Fly Nyan Cat through space, dodge the
 Domo-kun horde's spit balls and eye lasers, and blast them with your own laser eyes. 🌈🐱⚡
 
 > ⚠️ Like the original, this port is 100% vibecoded.
@@ -8,6 +8,8 @@ Domo-kun horde's spit balls and eye lasers, and blast them with your own laser e
 | Title | Gameplay (touch controls) |
 |---|---|
 | ![Title](docs/screenshots/title.png) | ![Gameplay](docs/screenshots/gameplay.png) |
+
+![Credits](docs/screenshots/credits.png)
 
 Runs on **Android 4.4 (API 19) and newer**. Tested on a Samsung Galaxy S3 (GT-I9300, 4.4.4).
 The APK contains 32-bit and 64-bit ARM code, so it also runs on modern phones.
@@ -59,4 +61,4 @@ cc -O2 -fsanitize=address,undefined -Isrc tools/host_render.c src/game.c -lm -o 
 tools/make_icon.py build/host/title.png   # regenerate launcher icons from the title screen
 ```
 
-`src/domo_sprite.h` and `src/title_img.h` are copied from the PSP project. See its `tools/` to regenerate them.
+`src/domo_sprite.h` and `src/title_img.h` are copied from the [PSP project](https://github.com/McL0v1n-therealone/nyan-cat-vs-domo-kun). See its `tools/` to regenerate them.

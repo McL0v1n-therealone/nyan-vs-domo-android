@@ -1132,9 +1132,10 @@ static void draw_pause(unsigned int ui, int sel) {
 
 /* '#' = title, '*' = heading, '' = blank, else = name. Edit freely! */
 static const char *credits[] = {
-    "#NYAN CAT",
-    "#VS",
     "#DOMO-KUN",
+    "#VS",
+    "#NYAN CAT",
+    "#ANDROID EDITION",
     "",
     "*IDEA & DIRECTION",
     "Mcl0v1n",
